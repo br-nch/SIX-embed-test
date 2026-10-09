@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SIX2-1549 Embed Test</title>
+<style>
+  :root { --bg:#fafafa; --fg:#1a1a1a; --muted:#666; --card:#fff; --line:#e3e3e3; --accent:#111; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#121212; --fg:#f0f0f0; --muted:#9a9a9a; --card:#1c1c1c; --line:#333; --accent:#f0f0f0; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:15px/1.5 system-ui, -apple-system, Segoe UI, sans-serif; }
+  main { max-width: 960px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  h2 { font-size: 16px; margin: 0 0 4px; }
+  p { margin: 4px 0 12px; color: var(--muted); }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:16px; margin:20px 0; }
+  code { font: 13px ui-monospace, SFMono-Regular, Menlo, monospace; background: rgba(127,127,127,.15); padding: 2px 6px; border-radius: 4px; word-break: break-all; }
+  button { font: inherit; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--line); background: var(--card); color: var(--fg); cursor: pointer; }
+  button:hover { border-color: var(--accent); }
+  input[type=url] { width: 100%; font: inherit; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); }
+  .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .row > input { flex:1; min-width: 240px; }
+  .frame-wrap { border:1px dashed var(--line); border-radius:8px; overflow:hidden; margin-top:8px; }
+  iframe { display:block; width:100%; border:0; background: repeating-linear-gradient(45deg, transparent 0 10px, rgba(127,127,127,.08) 10px 20px); }
+  .status { font-size: 13px; margin-top: 8px; color: var(--muted); }
+  .origin { font-size: 18px; font-weight: 600; word-break: break-all; }
+  .sizes { display:flex; gap:16px; flex-wrap:wrap; }
+  .sizes > div { flex: 1 1 280px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>SIX2-1549: embed test</h1>
+  <p>Checks whether app.sharesix.com Picks and SIXes can be framed from this origin once it is allowed via <code>frame-ancestors</code>.</p>
+
+  <section class="card">
+    <h2>Origin to allowlist</h2>
+    <p>This is the origin the embedded page will see as its parent. Give this exact value to Mike.</p>
+    <div class="row">
+      <span class="origin" id="origin"></span>
+      <button id="copy" type="button">Copy</button>
+    </div>
+    <div class="status" id="ancestors"></div>
+  </section>
+
+  <section class="card">
+    <h2>1. Pick</h2>
+    <p><code>https://app.sharesix.com/@Arcteryx/p/ymMF8t?sharedBy=Arcteryx</code></p>
+    <div class="frame-wrap"><iframe id="f1" title="Pick embed" height="640" loading="lazy"
+      src="https://app.sharesix.com/@Arcteryx/p/ymMF8t?sharedBy=Arcteryx"></iframe></div>
+    <div class="status" id="s1">Loading...</div>
+  </section>
+
+  <section class="card">
+    <h2>2. SIX</h2>
+    <p><code>https://app.sharesix.com/@Arcteryx/OKNXLk?sharedBy=Arcteryx&amp;s</code></p>
+    <div class="frame-wrap"><iframe id="f2" title="SIX embed" height="720" loading="lazy"
+      src="https://app.sharesix.com/@Arcteryx/OKNXLk?sharedBy=Arcteryx&s"></iframe></div>
+    <div class="status" id="s2">Loading...</div>
+  </section>
+
+  <section class="card">
+    <h2>3. Narrow widths</h2>
+    <p>Same Pick at phone and tablet widths, to check responsive layout inside the frame.</p>
+    <div class="sizes">
+      <div><div class="frame-wrap" style="max-width:375px"><iframe title="Pick 375" height="640" loading="lazy" src="https://app.sharesix.com/@Arcteryx/p/ymMF8t?sharedBy=Arcteryx"></iframe></div><div class="status">375px</div></div>
+      <div><div class="frame-wrap" style="max-width:768px"><iframe title="Pick 768" height="640" loading="lazy" src="https://app.sharesix.com/@Arcteryx/p/ymMF8t?sharedBy=Arcteryx"></iframe></div><div class="status">768px</div></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>4. Any URL</h2>
+    <p>Paste another sharesix.com URL (or any page) to try it.</p>
+    <div class="row">
+      <input type="url" id="custom" placeholder="https://app.sharesix.com/...">
+      <button id="go" type="button">Load</button>
+    </div>
+    <div class="frame-wrap"><iframe id="f4" title="Custom embed" height="640"></iframe></div>
+    <div class="status" id="s4">Nothing loaded yet.</div>
+  </section>
+
+  <section class="card">
+    <h2>Reading the results</h2>
+    <p>A blocked frame shows a blank box or a "refused to connect" icon. The browser's load event fires either way, so the status lines above are only a hint. The reliable signal is the console: open DevTools and look for <code>Refused to frame ... because an ancestor violates the following Content Security Policy directive: "frame-ancestors ..."</code>. The network tab shows the response's <code>Content-Security-Policy</code> header, which lists the allowed ancestors.</p>
+  </section>
+</main>
+
+<script>
+  var origin = location.origin;
+  document.getElementById('origin').textContent = origin;
+  document.getElementById('ancestors').textContent = 'Page URL: ' + location.href;
+  document.getElementById('copy').addEventListener('click', function () {
+    navigator.clipboard.writeText(origin).then(function () {
+      document.getElementById('copy').textContent = 'Copied';
+      setTimeout(function () { document.getElementById('copy').textContent = 'Copy'; }, 1500);
+    });
+  });
+
+  function track(frameId, statusId) {
+    var f = document.getElementById(frameId), s = document.getElementById(statusId);
+    var t0 = performance.now();
+    f.addEventListener('load', function () {
+      s.textContent = 'Frame load event fired after ' + Math.round(performance.now() - t0) +
+        ' ms. If the box is blank or shows an error icon, it was blocked; check the console.';
+    });
+  }
+  track('f1', 's1');
+  track('f2', 's2');
+
+  document.getElementById('go').addEventListener('click', function () {
+    var url = document.getElementById('custom').value.trim();
+    var s = document.getElementById('s4');
+    if (!/^https:\/\//i.test(url)) { s.textContent = 'Enter an https:// URL.'; return; }
+    var f = document.getElementById('f4');
+    var t0 = performance.now();
+    s.textContent = 'Loading...';
+    f.onload = function () {
+      s.textContent = 'Frame load event fired after ' + Math.round(performance.now() - t0) + ' ms. Check console if blank.';
+    };
+    f.src = url;
+  });
+</script>
+</body>
+</html>
